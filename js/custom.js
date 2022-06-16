@@ -1,11 +1,51 @@
-const N = 6363;
+const BASE_API_URL = 'http://datn.local/api/v1/'; // base uri of api server
+
+function action_url(action) {
+  return BASE_API_URL + action;
+}
+
+function load_dataset(jQuery, cb) {
+    jQuery.ajax({
+      type: "GET",
+      url: action_url(`dataset`),
+    }).done(function (data) {
+      globalThis.dataset = data
+      if(cb) cb()
+    });
+}
+
+function downloadCsv(csvString, fileName = "download.csv") {
+  var blob = new Blob([csvString]);
+  if (window.navigator.msSaveOrOpenBlob) {
+    window.navigator.msSaveBlob(blob, fileName);
+  } else {
+    var a = window.document.createElement("a");
+    a.href = window.URL.createObjectURL(blob, {
+      type: "text/plain",
+    });
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+}
+
 $(function () {
+  load_dataset($, function(){
+    $("#input-model_name").html(
+      globalThis.dataset.models.map(function(model){
+        return `<option value="${model.key}">${model.name}, `+
+          `${(model.accuracy * 100.0).toFixed(2)}%</option>`
+      })
+    );
+  });
+
   $("#btn-randomize").on("click", function (e) {
     e.preventDefault();
-    var indx = Math.floor(Math.random() * N);
+    var indx = Math.floor(Math.random() * globalThis.dataset.length);
     $.ajax({
       type: "GET",
-      url: `http://127.0.0.1:8000/dataset/${indx}`,
+      url: action_url(`dataset/${indx}`),
     }).done(function (data) {
       $("#input-text").val(data.text);
       $("#randomize-info").empty(); // clear content of #randomize-info
@@ -32,7 +72,7 @@ $(function () {
     };
     $.ajax({
       type: "POST",
-      url: "http://127.0.0.1:8000/predict/",
+      url: action_url("predict/"),
       data: JSON.stringify(formData),
       contentType: "application/json; charset=utf-8",
     }).done(function (data, statusText, request) {
@@ -52,19 +92,3 @@ $(function () {
     });
   });
 });
-
-function downloadCsv(csvString, fileName = "download.csv") {
-  var blob = new Blob([csvString]);
-  if (window.navigator.msSaveOrOpenBlob) {
-    window.navigator.msSaveBlob(blob, fileName);
-  } else {
-    var a = window.document.createElement("a");
-    a.href = window.URL.createObjectURL(blob, {
-      type: "text/plain",
-    });
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-}
