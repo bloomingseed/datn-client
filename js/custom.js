@@ -79,7 +79,7 @@ $(function () {
       if (formData.export) {
         var header = request.getResponseHeader("Content-Disposition");
         var fileName = header.substring(header.indexOf("=") + 1);
-        downloadBlob(data, fileName);
+        downloadBlob(data.toString(), fileName);
         return;
       }
 
