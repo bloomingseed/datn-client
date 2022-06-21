@@ -14,8 +14,8 @@ function load_dataset(jQuery, cb) {
     });
 }
 
-function downloadCsv(csvString, fileName = "download.csv") {
-  var blob = new Blob([csvString]);
+function downloadBlob(blob, fileName = "download.txt") {
+  var blob = new Blob([blob]);
   if (window.navigator.msSaveOrOpenBlob) {
     window.navigator.msSaveBlob(blob, fileName);
   } else {
@@ -79,7 +79,7 @@ $(function () {
       if (formData.export) {
         var header = request.getResponseHeader("Content-Disposition");
         var fileName = header.substring(header.indexOf("=") + 1);
-        downloadCsv(data, fileName);
+        downloadBlob(data, fileName);
         return;
       }
 
